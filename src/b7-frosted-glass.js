@@ -130,8 +130,13 @@ class B7FrostedGlass extends HTMLElement
 			let s = window.getComputedStyle(node);
 			let css = [];
 			for (let std of s) {
-				if (s[std] != style[std] && ['pointer-events'].indexOf(std) < 0) {
+				if (s[std] == style[std]) continue;
+				if (['pointer-events', 'perspective-origin'].indexOf(std) < 0) {
 					css.push(`${std}:${s[std]}`);
+				}
+				if (std == 'perspective-origin') {
+					let parts = s[std].split(' ');
+					css.push(`perspective-origin: calc(${parts[0]} - var(--frosted-glass_-_offset-left)) calc(${parts[1]} - var(--frosted-glass_-_offset-top))`);
 				}
 			}
 			copy.style.cssText = css.join(';');
