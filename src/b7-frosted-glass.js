@@ -99,7 +99,7 @@ class B7FrostedGlass extends HTMLElement
 
 	_stampWithStyles(node, to) {
 		if (node.nodeName == 'B7-FROSTED-GLASS') return null;
-		let copy = (node.nodeName == 'B7-FROSTED-GLASS-CONTAINER' || node.nodeName == 'BODY') ? document.createElement('div') : node.cloneNode(false);
+		let copy = (node.nodeName == 'BODY') ? document.createElement('div') : node.cloneNode(false);
 		to.appendChild(copy);
 		node.childNodes.forEach(child => {
 			let child_copy = this._stampWithStyles(child, copy);
