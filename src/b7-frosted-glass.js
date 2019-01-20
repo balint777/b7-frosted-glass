@@ -1,15 +1,14 @@
-import {LitElement, html} from 'lit-element';
-
-class B7FrostedGlass extends LitElement
+class B7FrostedGlass extends HTMLElement
 {
-	constructor()
-	{
+	constructor() {
 		super();
-		this.isFixed = false;
+		let shadowRoot = this.attachShadow({mode: 'open'});
+		this.shadowRoot.innerHTML = this.render();
 	}
 
 	render ()
 	{
+		let html = (strings) => strings.join();
 		return html`
 			<style>
 				:host {
@@ -49,26 +48,19 @@ class B7FrostedGlass extends LitElement
 				#content {
 					position: relative;
 				}
-				#content.fixed {
-					bottom: 0;
-					left: 0;
-					position: absolute;
-					right: 0;
-					top: 0;
-				}
 			</style>
 
 			<div id="blur">
 				<div id="blur-content"></div>
 				<div id="overlay"></div>
 			</div>
-			<div id="content" clsass="${this.isFixed ? ' fixed': ''}">
+			<div id="content">
 				<slot></slot>
 			</div>
 		`;
 	}
 
-	firstUpdated()
+	connectedCallback()
 	{
 		this.container = ((element, selector) => {
 			while (element && element.nodeType === 1) {
@@ -76,15 +68,16 @@ class B7FrostedGlass extends LitElement
 				element = element.parentNode;
 			}
 			return null;
-		})(this, 'b7-frosted-glass-container');
+		})(this, 'body');
 		this.blurContainer = this.shadowRoot.getElementById('blur');
-		this.blurContent = this.shadowRoot.getElementById('blur-content');
-		this.isFixed = window.getComputedStyle(this).position === 'fixed';
+		this.blurContent = this.shadowRoot.getElementById('blur-content').attachShadow({mode: 'open'});
 		
 		this._updateBlurContent();
 		
 		window.addEventListener('resize', _ => this._handleResize());
-		if (this.isFixed) window.addEventListener('scroll', _ => this._updateBlurPosition(), {passive: false});
+		if (window.getComputedStyle(this).position === 'fixed') {
+			window.addEventListener('scroll', _ => this._updateBlurPosition(), {passive: true});
+		}
 		this._handleResize();
 	}
 
@@ -100,13 +93,13 @@ class B7FrostedGlass extends LitElement
 	_updateBlurPosition() {
 		const rect = this.blurContainer.getBoundingClientRect();
 		const rect2 = this.container.getBoundingClientRect();
-		this.blurContent.style.setProperty('--frosted-glass_-_offset-left', `${ 0 - (rect.left - rect2.left) }px`);
-		this.blurContent.style.setProperty('--frosted-glass_-_offset-top', `${ 0 - (rect.top - rect2.top) }px`);
+		this.blurContent.host.style.setProperty('--frosted-glass_-_offset-left', `${ 0 - (rect.left - rect2.left) }px`);
+		this.blurContent.host.style.setProperty('--frosted-glass_-_offset-top', `${ 0 - (rect.top - rect2.top) }px`);
 	}
 
 	_stampWithStyles(node, to) {
 		if (node.nodeName == 'B7-FROSTED-GLASS') return null;
-		let copy = (node.nodeName == 'B7-FROSTED-GLASS-CONTAINER') ? document.createElement('div') : node.cloneNode(false);
+		let copy = (node.nodeName == 'B7-FROSTED-GLASS-CONTAINER' || node.nodeName == 'BODY') ? document.createElement('div') : node.cloneNode(false);
 		to.appendChild(copy);
 		node.childNodes.forEach(child => {
 			let child_copy = this._stampWithStyles(child, copy);
@@ -117,7 +110,7 @@ class B7FrostedGlass extends LitElement
 			let s = window.getComputedStyle(node);
 			let css = [];
 			for (let std of s) {
-				if (s[std] != style[std]) {
+				if (s[std] != style[std] && ['pointer-events', 'perspective-origin', 'transform-origin'].indexOf(std) < 0) {
 					css.push(`${std}:${s[std]}`);
 				}
 			}

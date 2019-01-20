@@ -8,8 +8,5 @@
   "description": "",
   "main": "src/index.js",
   "author": "Csonka Bálint",
-  "license": "MIT",
-  "dependencies": {
-    "lit-element": "^2.0.0-rc.3"
-  }
+  "license": "MIT"
 }
