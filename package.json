@@ -1,6 +1,9 @@
 {
   "name": "@chronos/b7-frosted-glass",
-  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/balint777/b7-frosted-glass"
+  },
   "version": "0.0.1",
   "description": "",
   "main": "src/index.js",
