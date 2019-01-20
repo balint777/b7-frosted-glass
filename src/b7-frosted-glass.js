@@ -78,7 +78,7 @@ class B7FrostedGlass extends LitElement
 				element = element.parentNode;
 			}
 			return null;
-		})(this, 'frosted-glass-container');
+		})(this, 'b7-frosted-glass-container');
 		this.blurContainer = this.shadowRoot.getElementById('blur');
 		this.blurContent = this.shadowRoot.getElementById('blur-content');
 		this.isFixed = window.getComputedStyle(this).position === 'fixed';

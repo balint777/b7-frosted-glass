@@ -32,4 +32,4 @@ class B7FrostedGlassContainer extends LitElement
 	}
 }
 
-customElements.define('b7-frosted-glass-container', FrostedGlassContainer);
+customElements.define('b7-frosted-glass-container', B7FrostedGlassContainer);
