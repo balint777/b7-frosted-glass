@@ -62,13 +62,6 @@ class B7FrostedGlass extends HTMLElement
 
 	connectedCallback()
 	{
-		this.container = ((element, selector) => {
-			while (element && element.nodeType === 1) {
-				if (element.matches(selector)) return element;
-				element = element.parentNode;
-			}
-			return null;
-		})(this, 'body');
 		this.blurContainer = this.shadowRoot.getElementById('blur');
 		this.blurContent = this.shadowRoot.getElementById('blur-content').attachShadow({mode: 'open'});
 		
@@ -92,20 +85,17 @@ class B7FrostedGlass extends HTMLElement
 
 	_updateBlurPosition() {
 		const rect = this.blurContainer.getBoundingClientRect();
-		const rect2 = this.container.getBoundingClientRect();
+		const rect2 = this.ownerDocument.documentElement.getBoundingClientRect();
 		this.blurContent.host.style.setProperty('--frosted-glass_-_offset-left', `${ 0 - (rect.left - rect2.left) }px`);
 		this.blurContent.host.style.setProperty('--frosted-glass_-_offset-top', `${ 0 - (rect.top - rect2.top) }px`);
 	}
 
 	_stampWithStyles(node, to) {
 		if (node.nodeName == 'B7-FROSTED-GLASS') return null;
-		let copy = (node.nodeName == 'BODY') ? document.createElement('div') : node.cloneNode(false);
-		to.appendChild(copy);
-		node.childNodes.forEach(child => {
-			let child_copy = this._stampWithStyles(child, copy);
-			if (child_copy) copy.appendChild(child_copy);
-		});
-		if (node.nodeType == 1) {
+		let copy = node.cloneNode(false);
+		if (node.nodeType != Node.DOCUMENT_TYPE_NODE) to.appendChild(copy);
+		node.childNodes.forEach(child => this._stampWithStyles(child, copy));
+		if (node.nodeType == Node.ELEMENT_NODE && node.nodeName != 'BODY' && node.nodeName != 'STYLE' && node.nodeName != 'HTML' && node.nodeName != 'HEAD') {
 			let style = window.getComputedStyle(copy);
 			let s = window.getComputedStyle(node);
 			let css = [];
@@ -122,11 +112,11 @@ class B7FrostedGlass extends HTMLElement
 	_updateBlurContent() {
 		if (!this._updatingBlurContent) window.requestAnimationFrame(_ => {
 			this.blurContent.childNodes.forEach(child => this.blurContent.removeChild(child));
-			this._stampWithStyles(this.container, this.blurContent);
+			this._stampWithStyles(this.ownerDocument.documentElement, this.blurContent);
 			this._updatingBlurContent = false;
 		});
 		this._updatingBlurContent = true;
 	}
 }
 
-customElements.define('b7-frosted-glass', B7FrostedGlass);
+window.customElements.define('b7-frosted-glass', B7FrostedGlass);
