@@ -4,7 +4,7 @@
 ```
 <custom-element-demo>
 	<template>
-		<script type="module" src="src/index.js"></script>
+		<script type="module" src="./src/index.js"></script>
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/mailtoharshit/San-Francisco-Font-/sanfrancisco.css"/>
 
 		<next-code-block></next-code-block>
