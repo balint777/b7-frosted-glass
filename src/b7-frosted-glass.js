@@ -84,12 +84,8 @@ class B7FrostedGlass extends LitElement
 		this._updateBlurContent();
 		
 		window.addEventListener('resize', _ => this._handleResize());
+		if (this.isFixed) window.addEventListener('scroll', _ => this._updateBlurPosition(), {passive: false});
 		this._handleResize();
-
-		if (!this.isFixed) { return; }
-		
-		window.addEventListener('scroll', _ => this._updateBlurPosition(), {passive: false});
-		this._updateBlurPosition();
 	}
 
 	_handleResize() {
@@ -104,8 +100,8 @@ class B7FrostedGlass extends LitElement
 	_updateBlurPosition() {
 		const rect = this.blurContainer.getBoundingClientRect();
 		const rect2 = this.container.getBoundingClientRect();
-		this.blurContent.style.setProperty('--frosted-glass_-_offset-left', `-${rect.left - rect2.left}px`);
-		this.blurContent.style.setProperty('--frosted-glass_-_offset-top', `-${this.isFixed ? rect.top - rect2.top : rect.top + window.scrollY}px`);
+		this.blurContent.style.setProperty('--frosted-glass_-_offset-left', `${ 0 - (rect.left - rect2.left) }px`);
+		this.blurContent.style.setProperty('--frosted-glass_-_offset-top', `${ 0 - (rect.top - rect2.top) }px`);
 	}
 
 	_stampWithStyles(node, to) {
