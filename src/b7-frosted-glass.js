@@ -62,15 +62,34 @@ class B7FrostedGlass extends HTMLElement
 
 	connectedCallback()
 	{
+		this.rootNode = this.getRootNode();
+		this.container = this.rootNode.querySelector('.b7-frosted-glass-container') || ((this.rootNode.nodeType == Node.DOCUMENT_FRAGMENT_NODE) ? this.rootNode.host : this.rootNode.querySelector('body'));
 		this.blurContainer = this.shadowRoot.getElementById('blur');
 		this.blurContent = this.shadowRoot.getElementById('blur-content').attachShadow({mode: 'open'});
+		
+		this.blurContentStylesheet = document.createElement('style');
+		this.blurContentStylesheet.innerText = [].slice.call(this.rootNode.styleSheets)
+		.reduce((prev, styleSheet) => {
+			try {
+				return prev +
+					[].slice.call(styleSheet.cssRules).reduce((prev, cssRule) => prev + cssRule.cssText, '');
+			} catch (e) {
+				return prev;
+			}
+		}, '');
+		this.blurContent.appendChild(this.blurContentStylesheet);
 		
 		this._updateBlurContent();
 		
 		window.addEventListener('resize', _ => this._handleResize());
-		if (window.getComputedStyle(this).position === 'fixed') {
+		//if (window.getComputedStyle(this).position === 'fixed') {
+			// window.addEventListener('scroll', _ => this._updateBlurPosition(), {passive: true});
+		if (window.getComputedStyle(this.container).overflow == 'visible') {
 			window.addEventListener('scroll', _ => this._updateBlurPosition(), {passive: true});
+		} else {
+			this.container.addEventListener('scroll', _ => this._updateBlurPosition(), {passive: true});
 		}
+		//}
 		this._handleResize();
 	}
 
@@ -85,34 +104,44 @@ class B7FrostedGlass extends HTMLElement
 
 	_updateBlurPosition() {
 		const rect = this.blurContainer.getBoundingClientRect();
-		const rect2 = this.ownerDocument.documentElement.getBoundingClientRect();
-		this.blurContent.host.style.setProperty('--frosted-glass_-_offset-left', `${ 0 - (rect.left - rect2.left) }px`);
-		this.blurContent.host.style.setProperty('--frosted-glass_-_offset-top', `${ 0 - (rect.top - rect2.top) }px`);
+		const rect2 = this.container.getBoundingClientRect();
+		this.blurContent.host.style.setProperty('--frosted-glass_-_offset-left', `${ 0 - (rect.left - rect2.left + this.container.scrollLeft) }px`);
+		this.blurContent.host.style.setProperty('--frosted-glass_-_offset-top', `${ 0 - (rect.top - rect2.top + this.container.scrollTop) }px`);
 	}
 
-	_stampWithStyles(node, to) {
-		if (node.nodeName == 'B7-FROSTED-GLASS') return null;
-		let copy = node.cloneNode(false);
-		if (node.nodeType != Node.DOCUMENT_TYPE_NODE) to.appendChild(copy);
+	_stampWithStyles(node, target) {
+		if (['B7-FROSTED-GLASS', 'LINK'].indexOf(node.nodeName) >= 0) return null;
+		let copy = null;
+		if ([Node.ELEMENT_NODE, Node.TEXT_NODE].indexOf(node.nodeType) >= 0) {
+			copy = node.cloneNode(false);
+			target.appendChild(copy);
+		}
+		if ([Node.DOCUMENT_NODE, Node.DOCUMENT_FRAGMENT_NODE].indexOf(node.nodeType) >= 0) {
+			copy = target;
+		}
+		
 		node.childNodes.forEach(child => this._stampWithStyles(child, copy));
-		if (node.nodeType == Node.ELEMENT_NODE && node.nodeName != 'BODY' && node.nodeName != 'STYLE' && node.nodeName != 'HTML' && node.nodeName != 'HEAD') {
+		if (node.nodeType == Node.ELEMENT_NODE && ['BODY', 'STYLE', 'HTML', 'HEAD'].indexOf(node.nodeName) < 0) {
 			let style = window.getComputedStyle(copy);
 			let s = window.getComputedStyle(node);
 			let css = [];
 			for (let std of s) {
-				if (s[std] != style[std] && ['pointer-events', 'perspective-origin', 'transform-origin'].indexOf(std) < 0) {
+				if (s[std] != style[std] && ['pointer-events'].indexOf(std) < 0) {
 					css.push(`${std}:${s[std]}`);
 				}
 			}
 			copy.style.cssText = css.join(';');
+			if (node == this.container) copy.style.overflow = 'visible';
 		}
 		return copy;
 	}
 
 	_updateBlurContent() {
 		if (!this._updatingBlurContent) window.requestAnimationFrame(_ => {
-			this.blurContent.childNodes.forEach(child => this.blurContent.removeChild(child));
-			this._stampWithStyles(this.ownerDocument.documentElement, this.blurContent);
+			this.blurContent.childNodes.forEach(child => {
+				if (child != this.blurContentStylesheet) this.blurContent.removeChild(child);
+			});
+			this._stampWithStyles(this.container, this.blurContent);
 			this._updatingBlurContent = false;
 		});
 		this._updatingBlurContent = true;
