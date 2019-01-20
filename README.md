@@ -24,7 +24,7 @@
 	height: 5em;
 	font-family: 'San Francisco', Helvetica, Arial, sans-serif;
 	box-shadow: 0 0 1em hsla(0, 0%, 0%, 0.2);
-	--frosted-glass-overlay-color: hsla(0, 0%, 100%, 0.3);
+	--frosted-glass-tint: hsla(0, 0%, 100%, 0.3);
 	--frosted-glass-blur-radius: 5rem;
 }
 

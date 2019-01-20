@@ -31,15 +31,13 @@ class B7FrostedGlass extends LitElement
 					left: 0;
 					position: absolute;
 					width: 100vw;
-					left: var(--frosted-glass_-_offset-left, 0px);
-					top: var(--frosted-glass_-_offset-top, 0px);
 					filter: blur(var(--frosted-glass-blur-radius, 5rem));
-					transform: translateY(var(--frosted-glass_-_scroll-offset, 0px));
+					transform: translate(var(--frosted-glass_-_offset-left, 0px), var(--frosted-glass_-_offset-top, 0px));
 					pointer-events: none;
 				}
 				
 				#overlay {
-					background-color: var(--frosted-glass-overlay-color, transparent);
+					background-color: var(--frosted-glass-tint, transparent);
 					bottom: 0;
 					content: '';
 					left: 0;
@@ -85,30 +83,39 @@ class B7FrostedGlass extends LitElement
 		
 		this._updateBlurContent();
 		
-		window.addEventListener('resize', _ => this.handleResize());
-		this.handleResize();
+		window.addEventListener('resize', _ => this._handleResize());
+		this._handleResize();
 
 		if (!this.isFixed) { return; }
 		
-		window.addEventListener('scroll', _ => this.handleScroll(), {passive: false});
-		this.handleScroll();
+		window.addEventListener('scroll', _ => this._updateBlurPosition(), {passive: false});
+		this._updateBlurPosition();
 	}
 
-	handleResize() {
+	_handleResize() {
+		if (!this._resizing) window.requestAnimationFrame(_ => {
+			this._updateBlurPosition();
+			this._updateBlurContent();
+			this._resizing = false;
+		});
+		this._resizing = true;
+	}
+
+	_updateBlurPosition() {
 		const rect = this.blurContainer.getBoundingClientRect();
-		this.blurContent.style.setProperty('--frosted-glass_-_offset-left', `-${rect.left}px`);
-		this.blurContent.style.setProperty('--frosted-glass_-_offset-top', `-${this.isFixed ? rect.top : rect.top + window.scrollY}px`);
-		this._updateBlurContent();
-	}
-
-	handleScroll() {
-		this.blurContent.style.setProperty('--frosted-glass_-_scroll-offset', `-${window.scrollY}px`);
+		const rect2 = this.container.getBoundingClientRect();
+		this.blurContent.style.setProperty('--frosted-glass_-_offset-left', `-${rect.left - rect2.left}px`);
+		this.blurContent.style.setProperty('--frosted-glass_-_offset-top', `-${this.isFixed ? rect.top - rect2.top : rect.top + window.scrollY}px`);
 	}
 
 	_stampWithStyles(node, to) {
-		let copy = (node.nodeName == 'B7-FROSTED-GLASS' || node.nodeName == 'B7-FROSTED-GLASS-CONTAINER') ? document.createElement('div') : node.cloneNode(false);
+		if (node.nodeName == 'B7-FROSTED-GLASS') return null;
+		let copy = (node.nodeName == 'B7-FROSTED-GLASS-CONTAINER') ? document.createElement('div') : node.cloneNode(false);
 		to.appendChild(copy);
-		node.childNodes.forEach(child => copy.appendChild(this._stampWithStyles(child, copy)));
+		node.childNodes.forEach(child => {
+			let child_copy = this._stampWithStyles(child, copy);
+			if (child_copy) copy.appendChild(child_copy);
+		});
 		if (node.nodeType == 1) {
 			let style = window.getComputedStyle(copy);
 			let s = window.getComputedStyle(node);
