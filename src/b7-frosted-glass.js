@@ -4,6 +4,22 @@ class B7FrostedGlass extends HTMLElement
 		super();
 		let shadowRoot = this.attachShadow({mode: 'open'});
 		this.shadowRoot.innerHTML = this.render();
+
+		this._updateBlurPositionTask = _ =>
+		{
+			const rect = this.blurContainer.getBoundingClientRect();
+			const rect2 = this.container.getBoundingClientRect();
+			this.blurContent.host.style.setProperty('--b7-frosted-glass_-_offset-left', `${ 0 - (rect.left - rect2.left + this.container.scrollLeft) }px`);
+			this.blurContent.host.style.setProperty('--b7-frosted-glass_-_offset-top', `${ 0 - (rect.top - rect2.top + this.container.scrollTop) }px`);
+			this._updatingBlurPosition = false;
+		}
+
+		this._handleResizeTask = _ =>
+		{
+			this._updateBlurPosition();
+			this._updateBlurContent();
+			this._resizing = false;
+		}
 	}
 
 	render ()
@@ -30,8 +46,8 @@ class B7FrostedGlass extends HTMLElement
 					left: 0;
 					position: absolute;
 					width: 100vw;
-					filter: blur(var(--frosted-glass-blur-radius, 5rem));
-					transform: translate(var(--frosted-glass_-_offset-left, 0px), var(--frosted-glass_-_offset-top, 0px));
+					filter: blur(var(--b7-frosted-glass-blur-radius, 5rem));
+					transform: translate(var(--b7-frosted-glass_-_offset-left, 0px), var(--b7-frosted-glass_-_offset-top, 0px));
 					pointer-events: none;
 				}
 				
@@ -81,35 +97,25 @@ class B7FrostedGlass extends HTMLElement
 		
 		this._updateBlurContent();
 		
-		window.addEventListener('resize', _ => this._handleResize());
+		window.addEventListener('resize', this._handleResize.bind(this));
 		//if (window.getComputedStyle(this).position === 'fixed') {
 			// window.addEventListener('scroll', _ => this._updateBlurPosition(), {passive: true});
 			if (window.getComputedStyle(this.container).overflow == 'visible') {
 				window.addEventListener('scroll', _ => this._updateBlurPosition(), {passive: true});
 			} else {
-				this.container.addEventListener('scroll', _ => this._updateBlurPosition(), {passive: true});
+				this.container.addEventListener('scroll', this._updateBlurPosition.bind(this), {passive: true});
 			}
 		//}
 		this._handleResize();
 	}
 
 	_handleResize() {
-		if (!this._resizing) window.requestAnimationFrame(_ => {
-			this._updateBlurPosition();
-			this._updateBlurContent();
-			this._resizing = false;
-		});
+		if (!this._resizing) window.requestAnimationFrame(this._handleResizeTask);
 		this._resizing = true;
 	}
 
 	_updateBlurPosition() {
-		if (!this._updatingBlurPosition) window.requestAnimationFrame(_ => {
-			const rect = this.blurContainer.getBoundingClientRect();
-			const rect2 = this.container.getBoundingClientRect();
-			this.blurContent.host.style.setProperty('--frosted-glass_-_offset-left', `${ 0 - (rect.left - rect2.left + this.container.scrollLeft) }px`);
-			this.blurContent.host.style.setProperty('--frosted-glass_-_offset-top', `${ 0 - (rect.top - rect2.top + this.container.scrollTop) }px`);
-			this._updatingBlurPosition = false;
-		});
+		if (!this._updatingBlurPosition) window.requestAnimationFrame(this._updateBlurPositionTask);
 		this._updatingBlurPosition = true;
 	}
 
@@ -136,7 +142,7 @@ class B7FrostedGlass extends HTMLElement
 				}
 				if (['perspective-origin', 'transform-origin'].indexOf(std) >= 0 && node == this.container) {
 					let parts = s[std].split(' ');
-					css.push(`${std}: calc(${parts[0]} - var(--frosted-glass_-_offset-left)) calc(${parts[1]} - var(--frosted-glass_-_offset-top))`);
+					css.push(`${std}: calc(${parts[0]} - var(--b7-frosted-glass_-_offset-left)) calc(${parts[1]} - var(--b7-frosted-glass_-_offset-top))`);
 				}
 			}
 			copy.style.cssText = css.join(';');
