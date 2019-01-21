@@ -89,7 +89,7 @@ class B7FrostedGlass extends HTMLElement
 			} else {
 				this.container.addEventListener('scroll', _ => this._updateBlurPosition(), {passive: true});
 			}
-			//}
+		//}
 		this._handleResize();
 	}
 
@@ -131,12 +131,12 @@ class B7FrostedGlass extends HTMLElement
 			let css = [];
 			for (let std of s) {
 				if (s[std] == style[std]) continue;
-				if (['pointer-events', 'perspective-origin'].indexOf(std) < 0) {
+				if (['pointer-events', 'perspective-origin', 'transform-origin'].indexOf(std) < 0) {
 					css.push(`${std}:${s[std]}`);
 				}
-				if (std == 'perspective-origin') {
+				if (['perspective-origin', 'transform-origin'].indexOf(std) >= 0 && node == this.container) {
 					let parts = s[std].split(' ');
-					css.push(`perspective-origin: calc(${parts[0]} - var(--frosted-glass_-_offset-left)) calc(${parts[1]} - var(--frosted-glass_-_offset-top))`);
+					css.push(`${std}: calc(${parts[0]} - var(--frosted-glass_-_offset-left)) calc(${parts[1]} - var(--frosted-glass_-_offset-top))`);
 				}
 			}
 			copy.style.cssText = css.join(';');
